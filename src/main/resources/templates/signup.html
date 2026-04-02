@@ -1,3 +1,11 @@
 <!DOCTYPE html>
-
-<b> HUI</b>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>SignUp</title></head>
+<body>
+<form th:action="@{/api/auth/signup}" method="post">
+    <input type="text" name="username" placeholder="Username"/>
+    <input type="password" name="password" placeholder="Password"/>
+    <button type="submit">Войти</button>
+</form>
+</body>
+</html>

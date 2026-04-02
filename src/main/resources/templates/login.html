@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>Login</title></head>
+<body>
+<form th:action="@{/api/auth/login}" method="post">
+    <label>
+        <input type="text" name="username" placeholder="Username"/>
+    </label>
+    <label>
+        <input type="password" name="password" placeholder="Password"/>
+    </label>
+    <button type="submit">Войти</button>
+</form>
+</body>
+</html>

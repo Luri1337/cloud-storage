@@ -3,6 +3,7 @@ package org.example.cloudstorage.controller;
 import org.example.cloudstorage.UserDto;
 import org.example.cloudstorage.service.UserService;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -15,7 +16,7 @@ public class AuthController {
     }
 
     @PostMapping("api/auth/signup")
-    public String register(@RequestBody UserDto user) {
+    public String register(@ModelAttribute UserDto user) {
         userService.registerUser(user);
         return "redirect:/login";
     }
