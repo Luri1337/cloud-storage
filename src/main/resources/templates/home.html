@@ -1,7 +1,114 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head><title>Home</title></head>
+<head>
+    <meta charset="UTF-8">
+    <title>Cloud Storage | Home</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; display: flex; }
+        .sidebar { width: 250px; background: #2c3e50; color: white; height: 100vh; padding: 20px; position: fixed; }
+        .main-content { margin-left: 290px; padding: 40px; width: 100%; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 600px; }
+        h1 { color: #2c3e50; margin-top: 0; }
+        .user-info { margin-bottom: 30px; font-size: 0.9em; color: #bdc3c7; }
+
+        .upload-section label { display: block; margin-bottom: 8px; font-weight: bold; color: #34495e; }
+        input[type="file"], input[type="text"] { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #dce4ec; border-radius: 6px; box-sizing: border-box; }
+
+        button { background: #3498db; color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; width: 100%; font-size: 16px; transition: background 0.3s; }
+        button:hover { background: #2980b9; }
+
+        #status { margin-top: 20px; padding: 15px; border-radius: 6px; display: none; }
+        .success { background: #d4edda; color: #155724; display: block !important; }
+        .error { background: #f8d7da; color: #721c24; display: block !important; }
+    </style>
+</head>
 <body>
+
+<div class="sidebar">
+    <h2>Cloud Storage</h2>
+    <div class="user-info">
+        Вы вошли как: <br>
+        <strong th:text="${username}">User</strong>
+    </div>
+    <nav>
+        <p style="color: #3498db; cursor: pointer;">📁 Мои файлы</p>
+        <p style="cursor: pointer;">⚙️ Настройки</p>
+        <hr style="border: 0; border-top: 1px solid #3e4f5f; margin: 20px 0;">
+        <form th:action="@{/logout}" method="post">
+            <button type="submit" style="background: transparent; color: #e74c3c; text-align: left; padding: 0; width: auto; font-size: 14px;">Выйти из системы</button>
+        </form>
+    </nav>
+</div>
+
+<div class="main-content">
+    <h1>Моё хранилище</h1>
+
+    <div class="card">
+        <div class="upload-section">
+            <h3>Загрузить новый файл</h3>
+            <form id="uploadForm" th:action="@{/api/files/upload}" method="post" enctype="multipart/form-data">
+                <label for="fileInput">Выбрать файл:</label>
+                <input type="file" name="file" id="fileInput" required>
+
+                <label for="pathInput">Путь (необязательно):</label>
+                <input type="text" name="path" id="pathInput" placeholder="Например: docs/work">
+
+                <button type="submit" id="submitBtn">Загрузить в облако</button>
+            </form>
+            <div id="status"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const form = document.getElementById('uploadForm');
+    const statusDiv = document.getElementById('status');
+    const btn = document.getElementById('submitBtn');
+
+    form.onsubmit = async (e) => {
+        e.preventDefault();
+
+        btn.disabled = true;
+        btn.innerText = 'Загрузка...';
+        statusDiv.className = '';
+        statusDiv.style.display = 'block';
+        statusDiv.innerText = 'Отправка файла на сервер...';
+
+        const formData = new FormData();
+        formData.append('file', document.getElementById('fileInput').files[0]);
+        formData.append('path', document.getElementById('pathInput').value);
+
+        // ВАЖНО: Достаем CSRF токен, который Thymeleaf спрятал в форме
+        const csrfToken = document.querySelector('input[name="_csrf"]').value;
+        formData.append('_csrf', csrfToken);
+
+        try {
+            const response = await fetch('/api/files/upload', {
+                method: 'POST',
+                // Заголовки Content-Type для FormData браузер ставит сам, не меняй их
+                body: formData
+            });
+
+            const result = await response.text();
+
+            if (response.ok) {
+                statusDiv.innerText = '✅ Успешно: ' + result;
+                statusDiv.className = 'success';
+                form.reset();
+            } else {
+                // Если пришла ошибка (например, 403 или 500), выводим её текст
+                statusDiv.innerText = '❌ Ошибка (' + response.status + '): ' + result;
+                statusDiv.className = 'error';
+            }
+        } catch (error) {
+            statusDiv.innerText = '❌ Ошибка сети: ' + error.message;
+            statusDiv.className = 'error';
+        } finally {
+            btn.disabled = false;
+            btn.innerText = 'Загрузить в облако';
+        }
+    };
+</script>
 
 </body>
 </html>
