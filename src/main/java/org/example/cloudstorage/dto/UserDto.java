@@ -1,4 +1,4 @@
-package org.example.cloudstorage;
+package org.example.cloudstorage.dto;
 
 import lombok.Getter;
 import lombok.Setter;

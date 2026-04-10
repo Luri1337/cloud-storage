@@ -1,7 +1,8 @@
 package org.example.cloudstorage.service;
 
-import org.example.cloudstorage.UserDto;
+import org.example.cloudstorage.dto.UserDto;
 import org.example.cloudstorage.entity.User;
+import org.example.cloudstorage.exception.UsernameAlreadyExistsException;
 import org.example.cloudstorage.repository.UserRepository;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -30,11 +31,17 @@ public class UserService implements UserDetailsService {
 
     }
 
-    public void registerUser(@NotNull UserDto user) {
+    public User registerUser(@NotNull UserDto user) {
+        if(userRepository.findByUsername(user.getUsername()).isPresent()) {
+            throw new UsernameAlreadyExistsException(user.getUsername() +" already taken");
+        }
+
         User newUser = new User();
         newUser.setUsername(user.getUsername());
         newUser.setPassword(passwordEncoder.encode(user.getPassword()));
 
         userRepository.save(newUser);
+
+        return newUser;
     }
 }
