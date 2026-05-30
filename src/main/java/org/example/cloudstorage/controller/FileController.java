@@ -49,7 +49,7 @@ public class FileController {
             @AuthenticationPrincipal User user,
             @RequestParam(value = "path", defaultValue = "") String path
 
-    ) throws Exception {
+    ) {
         fileService.createFolder(buildFullPath(user.getId(), path));
         return ResponseEntity.ok("Folder created successfully");
     }
@@ -70,19 +70,6 @@ public class FileController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(new InputStreamResource(inputStream));
-    }
-
-    @GetMapping("/getFiles")
-    public ResponseEntity<List<String>> getFiles(
-            @RequestParam(value = "path", defaultValue = "") String path,
-            @AuthenticationPrincipal User user
-    ) {
-        try {
-            List<String> files = fileService.getFiles(buildFullPath(user.getId(), path));
-            return ResponseEntity.ok(files);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ArrayList<String>());
-        }
     }
 
     @DeleteMapping("/deleteFile")
