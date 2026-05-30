@@ -4,6 +4,7 @@ import io.minio.*;
 import io.minio.messages.DeleteError;
 import io.minio.messages.DeleteObject;
 import io.minio.messages.Item;
+import org.example.cloudstorage.dto.StorageObjectDto;
 import org.example.cloudstorage.exception.DeleteFileException;
 import org.example.cloudstorage.exception.GetFileException;
 import org.example.cloudstorage.exception.UploadFileException;
@@ -43,7 +44,7 @@ public class FileService {
         }
     }
 
-    public void createFolder(String userPath) throws Exception {
+    public void createFolder(String userPath) {
         try{
             minioClient.putObject(
                     PutObjectArgs.builder()
@@ -66,19 +67,24 @@ public class FileService {
         );
     }
 
-    public List<String> getFiles(String userPath) throws Exception {
-        List<String> files = new ArrayList<>();
+    public List<StorageObjectDto> getFiles(String userPath) {
+        List<StorageObjectDto> files = new ArrayList<>();
 
         try{
             Iterable<Result<Item>> results = listObjects(userPath, false);
 
             for (Result<Item> result : results) {
-                String fullName = result.get().objectName();
+                Item item = result.get();
+                String fullName = item.objectName();
+                String relativeName = fullName.substring(userPath.length() + 1);
 
-                if (fullName.length() > userPath.length() + 1) {
-                    files.add(fullName.substring(userPath.length() + 1));
-                }
+                boolean isDir = relativeName.endsWith("/");
+                String type = isDir ? "DIRECTORY" : "FILE";
+                String name = isDir ? relativeName : relativeName.substring(relativeName.lastIndexOf("/") + 1);
+                String path = isDir ? "" : relativeName.substring(0, relativeName.lastIndexOf("/") + 1);
+                long size = item.size();
 
+                files.add(new StorageObjectDto(name, path, size, type));
             }
         }catch (Exception e){
             throw new GetFileException("Cannot get files");
@@ -87,7 +93,7 @@ public class FileService {
         return files;
     }
 
-    public void deleteFile(String userPath) throws Exception {
+    public void deleteFile(String userPath) {
         try{
             minioClient.removeObject(
                     RemoveObjectArgs.builder()
@@ -100,7 +106,7 @@ public class FileService {
         }
     }
 
-    public void deleteFolder(String userPath) throws Exception {
+    public void deleteFolder(String userPath) {
         try{
             Iterable<Result<Item>> results = listObjects(userPath, true);
             List<DeleteObject> toDelete = new ArrayList<>();
@@ -126,7 +132,7 @@ public class FileService {
         }
     }
 
-    private Iterable<Result<Item>> listObjects(String fullPrefix, boolean recursive) throws Exception {
+    private Iterable<Result<Item>> listObjects(String fullPrefix, boolean recursive) {
         return minioClient.listObjects(
                 ListObjectsArgs.builder()
                         .bucket(defaultBucket)
